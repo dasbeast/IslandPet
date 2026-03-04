@@ -11,6 +11,8 @@
 		D445657F2DDFDC8A00617EF5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D42DDCE92DDF9EF100399388 /* WidgetKit.framework */; };
 		D4779ABC2E00BE17002EBB7A /* PetActivityWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D42DDCE72DDF9EF100399388 /* PetActivityWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D4DE87312E216AA100260729 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D4DE87302E216AA100260729 /* Config.xcconfig */; };
+		DE03E01D2F50DB8F00AD0D5F /* PetColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE03E01C2F50DA2900AD0D5F /* PetColors.swift */; };
+		DE03E01E2F50DBA900AD0D5F /* PetColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE03E01C2F50DA2900AD0D5F /* PetColors.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,6 +93,7 @@
 		D42DDCEB2DDF9EF200399388 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		D4779A8D2DFE5B32002EBB7A /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
 		D4DE87302E216AA100260729 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		DE03E01C2F50DA2900AD0D5F /* PetColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetColors.swift; sourceTree = "<group>"; };
 		DEA504052E1ADCE300FFAEA0 /* PetActivityWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PetActivityWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -204,6 +207,7 @@
 				D42DDCED2DDF9EF200399388 /* PetActivityWidget */,
 				D42DDCE82DDF9EF100399388 /* Frameworks */,
 				D42DDCBA2DDF9E1D00399388 /* Products */,
+				DE03E01B2F50DA2500AD0D5F /* Shared */,
 			);
 			sourceTree = "<group>";
 		};
@@ -226,6 +230,14 @@
 				D4779A8D2DFE5B32002EBB7A /* Intents.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DE03E01B2F50DA2500AD0D5F /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				DE03E01C2F50DA2900AD0D5F /* PetColors.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -412,6 +424,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE03E01E2F50DBA900AD0D5F /* PetColors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -433,6 +446,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE03E01D2F50DB8F00AD0D5F /* PetColors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

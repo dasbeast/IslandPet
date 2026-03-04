@@ -1,34 +1,7 @@
 import WidgetKit
 import SwiftUI
 
-// MARK: - Color Helpers
-private func hungerColor(for hunger: Int) -> Color {
-    switch hunger {
-    case 0...30:
-        return .green
-    case 31...70:
-        return .yellow
-    default:
-        return .red
-    }
-}
-
-private func happinessColor(for happiness: Int) -> Color {
-    switch happiness {
-    case 81...100:
-        return .indigo
-    case 61...80:
-        return .mint
-    case 41...60:
-        return .cyan
-    case 21...40:
-        return .teal
-    default:
-        return .white
-    }
-}
-
-// ... (PetStatusEntry and PetStatusProvider remain the same) ...
+// MARK: - Timeline Entry
 struct PetStatusEntry: TimelineEntry {
     let date: Date
     let petID: String
@@ -38,8 +11,15 @@ struct PetStatusEntry: TimelineEntry {
 }
 
 struct PetStatusProvider: TimelineProvider {
-    @AppStorage("petID", store: UserDefaults(suiteName: "group.com.superbailey.IslandPet")) private var storedPetID: String = ""
-    @AppStorage("speciesID", store: UserDefaults(suiteName: "group.com.superbailey.IslandPet")) private var storedSpeciesID: String = ""
+    private static let defaults = UserDefaults(suiteName: "group.com.superbailey.IslandPet")
+
+    private var storedPetID: String {
+        Self.defaults?.string(forKey: "petID") ?? ""
+    }
+
+    private var storedSpeciesID: String {
+        Self.defaults?.string(forKey: "speciesID") ?? ""
+    }
 
     func placeholder(in context: Context) -> PetStatusEntry {
         PetStatusEntry(date: Date(), petID: "winnie", speciesID: "winnie", happiness: 100, hunger: 0)

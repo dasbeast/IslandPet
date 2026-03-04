@@ -17,6 +17,7 @@ struct PetSelectionView: View {
     @State private var selection: Pet = Pet.all.first ?? .winnie
     @State private var showAlert = false
     @State private var alertMessage: String = ""
+    @State private var isAdopting = false
     var onAdopt: (Pet) -> Void      // callback to dashboard
 
     var body: some View {
@@ -43,18 +44,12 @@ struct PetSelectionView: View {
                 .font(.title2.bold())
 
             Button {
-                // Prevent duplicate adoption calls
-                guard storedSessionID.isEmpty else {
-                    // Already adopted; just proceed
-                    onAdopt(selection)
-                    return
-                }
+                isAdopting = true
                 Task {
                     // Create a new pet instance to get a unique pet ID
                     let instance = Pet.makeInstance(from: selection)
                     // 1. Generate a unique session ID for this pet life
                     let newSessionID = UUID().uuidString
-                    storedSessionID = newSessionID
                     
                     do {
                         // 2. Register the new pet session on the server with this session ID
@@ -65,14 +60,19 @@ struct PetSelectionView: View {
                             speciesID: instance.assetName
                         )
                         // 3. Persist the chosen species and invoke the adopt callback
+                        storedSessionID = newSessionID
                         storedSpeciesID = instance.assetName
                         storedPetID = instance.id
+                        
+                        // 4. Grant starter food for the new pet
+                        UserDefaults(suiteName: "group.com.superbailey.IslandPet")?.set(5, forKey: "foodCount")
                         
                         // Tell the widget to reload its timeline
                         WidgetCenter.shared.reloadTimelines(ofKind: "PetStatusWidget")
                                                 
                         onAdopt(instance)
                     } catch {
+                        isAdopting = false
                         alertMessage = "Failed to adopt pet: \(error.localizedDescription)"
                         showAlert = true
                     }
@@ -85,7 +85,7 @@ struct PetSelectionView: View {
             .controlSize(.large)
             .tint(.accentColor)
             .padding(.horizontal, 40)
-            .disabled(!storedSessionID.isEmpty)
+            .disabled(isAdopting)
         }
         .padding()
         .onAppear {

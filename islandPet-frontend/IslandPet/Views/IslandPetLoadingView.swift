@@ -30,8 +30,6 @@ struct IslandPetLoadingView: View {
     }
 }
 
-struct IslandPetLoadingView_Previews: PreviewProvider {
-    static var previews: some View {
-        IslandPetLoadingView()
-    }
+#Preview {
+    IslandPetLoadingView()
 }

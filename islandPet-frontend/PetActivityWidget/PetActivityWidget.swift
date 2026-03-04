@@ -4,32 +4,9 @@ import UIKit
 import ActivityKit
 import AppIntents
 
-// Helper function to determine hunger color
-private func hungerColor(for hunger: Int) -> Color {
-    switch hunger {
-    case 0...30:
-        return .green
-    case 31...70:
-        return .yellow
-    default:
-        return .red
-    }
-}
-
-// Helper function to determine happiness bar color
-private func happinessColor(for happiness: Int) -> Color {
-    switch happiness {
-    case 81...100:
-        return .indigo
-    case 61...80:
-        return .mint
-    case 41...60:
-        return .cyan
-    case 21...40:
-        return .teal
-    default:
-        return .gray
-    }
+/// Safely resolve a pet image by name, falling back to a system symbol.
+private func petImage(named name: String) -> UIImage {
+    UIImage(named: name) ?? UIImage(systemName: "pawprint.fill") ?? UIImage()
 }
 
 // A helper view to contain the logic for switching between widget families.
@@ -65,9 +42,7 @@ struct PetActivityView: View {
             switch activityFamily {
             case .small:
                 HStack(spacing: 10) {
-                                let imageName = context.attributes.speciesID
-                                let uiImage = UIImage(named: imageName) ?? UIImage(systemName: "pawprint.fill")!
-                                Image(uiImage: uiImage)
+                                Image(uiImage: petImage(named: context.attributes.speciesID))
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 75, height: 75)
@@ -107,10 +82,8 @@ struct PetActivityView: View {
                                 }
                             }
             default:
-                let imageName = context.attributes.speciesID
-                let uiImage = UIImage(named: imageName) ?? UIImage(systemName: "pawprint.fill")!
                 HStack(alignment: .center, spacing: 12) {
-                    Image(uiImage: uiImage)
+                    Image(uiImage: petImage(named: context.attributes.speciesID))
                         .resizable()
                         .scaledToFit()
                         .frame(width: 100, height: 100)
@@ -190,9 +163,7 @@ struct PetActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    let imageName = context.attributes.speciesID
-                    let uiImage = UIImage(named: imageName) ?? UIImage(systemName: "pawprint.fill")!
-                    Image(uiImage: uiImage)
+                    Image(uiImage: petImage(named: context.attributes.speciesID))
                         .resizable()
                         .scaledToFit()
                         .frame(width: 100, height: 100)
@@ -234,17 +205,13 @@ struct PetActivityWidget: Widget {
                     Spacer()
                 }
             } compactLeading: {
-                let imageName = context.attributes.speciesID
-                let uiImage = UIImage(named: imageName) ?? UIImage(systemName: "pawprint.fill")!
-                Image(uiImage: uiImage)
+                Image(uiImage: petImage(named: context.attributes.speciesID))
                         .resizable()
                         .scaledToFit()
                         .frame(width: 35, height: 25)
             } compactTrailing: {
             } minimal: {
-                let imageName = context.attributes.speciesID
-                let uiImage = UIImage(named: imageName) ?? UIImage(systemName: "pawprint.fill")!
-                Image(uiImage: uiImage)
+                Image(uiImage: petImage(named: context.attributes.speciesID))
                     .resizable()
                     .scaledToFit()
                     .frame(width: 15, height: 15)

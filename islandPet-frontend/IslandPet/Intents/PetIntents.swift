@@ -14,29 +14,7 @@ import SwiftUI   // for LocalizedStringResource
 private let intentLog = Logger(subsystem: "com.superbailey.IslandPet",
                                category: "PetIntents")
 
-class Debouncer {
-    private var workItem: DispatchWorkItem?
-    private let queue: DispatchQueue
-    private let delay: TimeInterval
-
-    init(delay: TimeInterval, queue: DispatchQueue = .main) {
-        self.delay = delay
-        self.queue = queue
-    }
-
-    func debounce(action: @escaping () -> Void) {
-        workItem?.cancel()
-        let newWorkItem = DispatchWorkItem(block: action)
-        workItem = newWorkItem
-        queue.asyncAfter(deadline: .now() + delay, execute: newWorkItem)
-    }
-}
-
-// Create a single debouncer instance to be shared by both intents.
-private let networkDebouncer = Debouncer(delay: 5.0)
-
-
-/// “Feed” button background intent
+/// "Feed" button background intent
 @available(iOS 17.0, *)
 struct FeedPetIntent: LiveActivityIntent, AppIntent {
     static var title: LocalizedStringResource = "Feed Pet"
@@ -74,6 +52,15 @@ struct FeedPetIntent: LiveActivityIntent, AppIntent {
     func perform() async throws -> some IntentResult  & ReturnsValue<String> {
         intentLog.info("🍖 FeedPetIntent fired")
 
+                // 0. Check food inventory.
+                let defaults = UserDefaults(suiteName: "group.com.superbailey.IslandPet")
+                let currentFood = defaults?.integer(forKey: "foodCount") ?? 0
+                guard currentFood > 0 else {
+                    intentLog.info("No food available for feeding")
+                    return .result(value: "No food! Open the app to go fishing.")
+                }
+                defaults?.set(currentFood - 1, forKey: "foodCount")
+
                 // 1. Find the Live Activity first.
                 guard let activity = Activity<PetAttributes>.activities.first(where: { $0.attributes.petID == petID }) else {
                     intentLog.error("No Live Activity matching ID: \(self.petID, privacy: .public)")
@@ -89,22 +76,18 @@ struct FeedPetIntent: LiveActivityIntent, AppIntent {
                 await activity.update(using: newState)
                 intentLog.info("UI updated instantly for petID: \(self.petID, privacy: .public)")
 
-                // 4. Debounce the network call to send the final state.
-                networkDebouncer.debounce {
-                    Task {
-                        do {
-                            try await Network.sendPetStateUpdate(
-                                petID: self.petID,
-                                hunger: newHunger,
-                                happiness: newHappiness
-                            )
-                            intentLog.info("Network update sent for petID: \(self.petID, privacy: .public)")
-                        } catch {
-                            intentLog.error("sendPetStateUpdate error: \(error.localizedDescription, privacy: .public)")
-                        }
-                    }
+                // 4. Send the network update directly.
+                do {
+                    try await Network.sendPetStateUpdate(
+                        petID: self.petID,
+                        hunger: newHunger,
+                        happiness: newHappiness
+                    )
+                    intentLog.info("Network update sent for petID: \(self.petID, privacy: .public)")
+                } catch {
+                    intentLog.error("sendPetStateUpdate error: \(error.localizedDescription, privacy: .public)")
                 }
-                
+
         return .result(value: "Pet fed.")
     }
 }
@@ -163,21 +146,18 @@ struct PlayPetIntent: LiveActivityIntent, AppIntent {
                 await activity.update(using: newState)
                 intentLog.info("UI updated instantly for petID: \(self.petID, privacy: .public)")
 
-                // 4. Debounce the network call.
-                networkDebouncer.debounce {
-                    Task {
-                        do {
-                            try await Network.sendPetStateUpdate(
-                                petID: self.petID,
-                                hunger: newHunger,
-                                happiness: newHappiness
-                            )
-                            intentLog.info("Network update sent for petID: \(self.petID, privacy: .public)")
-                        } catch {
-                            intentLog.error("sendPetStateUpdate error: \(error.localizedDescription, privacy: .public)")
-                        }
-                    }
+                // 4. Send the network update directly.
+                do {
+                    try await Network.sendPetStateUpdate(
+                        petID: self.petID,
+                        hunger: newHunger,
+                        happiness: newHappiness
+                    )
+                    intentLog.info("Network update sent for petID: \(self.petID, privacy: .public)")
+                } catch {
+                    intentLog.error("sendPetStateUpdate error: \(error.localizedDescription, privacy: .public)")
                 }
+
         return .result(value: "Played with pet.")
     }
 }

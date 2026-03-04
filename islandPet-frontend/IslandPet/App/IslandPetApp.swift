@@ -43,22 +43,23 @@ struct IslandPetApp: App {
                 }
             }
             .task {
-                // Ensure the loading screen is visible for at least 3 seconds
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                // 🔍 Debug: what’s in storage right now?
-               
-                if !didLoad {
-                    if !storedPetID.isEmpty,
-                       let descriptor = Pet.all.first(where: { $0.assetName == storedSpeciesID }) {
-                        adoptedPet = Pet(id: storedPetID, name: descriptor.name, assetName: descriptor.assetName)
-                    } else {
-                        // clear invalid persisted data
-                        storedPetID = ""
-                        storedSpeciesID = ""
-                    }
-                    isLoading = false
-                    didLoad = true
+                guard !didLoad else { return }
+                
+                // Run data loading and a minimum display time in parallel
+                async let minimumDisplay: () = Task.sleep(nanoseconds: 1_500_000_000)
+                
+                if !storedPetID.isEmpty,
+                   let descriptor = Pet.all.first(where: { $0.assetName == storedSpeciesID }) {
+                    adoptedPet = Pet(id: storedPetID, name: descriptor.name, assetName: descriptor.assetName)
+                } else {
+                    storedPetID = ""
+                    storedSpeciesID = ""
                 }
+                
+                // Wait for the minimum display time before hiding the loading view
+                try? await minimumDisplay
+                isLoading = false
+                didLoad = true
             }
         }
     }

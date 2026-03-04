@@ -18,7 +18,12 @@ struct PetDashboardView: View {
     @AppStorage("lastKnownHunger", store: UserDefaults(suiteName: "group.com.superbailey.IslandPet")) private var lastKnownHunger: Int = 0
     @AppStorage("lastKnownHappiness", store: UserDefaults(suiteName: "group.com.superbailey.IslandPet")) private var lastKnownHappiness: Int = 100
     
+    @AppStorage("foodCount", store: UserDefaults(suiteName: "group.com.superbailey.IslandPet")) private var foodCount: Int = 0
+    @AppStorage("wormCount", store: UserDefaults(suiteName: "group.com.superbailey.IslandPet")) private var wormCount: Int = 0
+    
     @State private var showEndConfirmation: Bool = false
+    @State private var showFishingGame: Bool = false
+    @State private var showTugOfWarGame: Bool = false
 
         init(pet: Pet, onRehome: @escaping () -> Void) {
             self.pet = pet
@@ -31,34 +36,6 @@ struct PetDashboardView: View {
             _hunger = State(initialValue: initialHunger)
             _happiness = State(initialValue: initialHappiness)
         }
-    // Helper to determine hunger bar color
-    private func hungerColor(for hunger: Int) -> Color {
-        switch hunger {
-        case 0...30:
-            return .green
-        case 31...70:
-            return .yellow
-        default:
-            return .red
-        }
-    }
-    
-    // Helper to determine happiness bar color
-    private func happinessColor(for happiness: Int) -> Color {
-        switch happiness {
-        case 81...100:
-            return .indigo
-        case 61...80:
-            return .mint
-        case 41...60:
-            return .cyan
-        case 21...40:
-            return .teal
-        default:
-            return .gray
-        }
-    }
-    
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -93,6 +70,27 @@ struct PetDashboardView: View {
                             .foregroundColor(.red)
                             .padding(.top, -10)
                     }
+                    Divider()
+                    HStack {
+                        Image(systemName: "fish.fill")
+                            .foregroundColor(.cyan)
+                        Text("Food")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(foodCount)")
+                            .font(.headline)
+                            .monospacedDigit()
+                    }
+                    HStack {
+                        Image(systemName: "leaf.fill")
+                            .foregroundColor(.green)
+                        Text("Worms")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(wormCount)")
+                            .font(.headline)
+                            .monospacedDigit()
+                    }
                 }
                 .padding()
                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -110,16 +108,27 @@ struct PetDashboardView: View {
                     .disabled(currentActivity != nil)
 
                     HStack(spacing: 20) {
-                        actionButton("Feed", systemImage: "fork.knife") {
+                        actionButton("Feed (\(foodCount))", systemImage: "fork.knife") {
                             Task { await feedPet() }
                         }
                         .tint(hungerColor(for: hunger))
+                        .disabled(foodCount <= 0)
 
                         actionButton("Play", systemImage: "gamecontroller") {
-                            Task { await playPet() }
+                            showTugOfWarGame = true
                         }
                         .tint(happinessColor(for: happiness))
                     }
+
+                    Button {
+                        showFishingGame = true
+                    } label: {
+                        Label("Go Fishing", systemImage: "fish.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .tint(.cyan)
 
                     Button {
                         Task { await endPet() }
@@ -157,16 +166,15 @@ struct PetDashboardView: View {
             }
             await fetchLatestPetState()
         }
-        .onChange(of: currentActivity?.content.state) { newState in
+        .onChange(of: currentActivity?.content.state) { _, newState in
             if let state = newState {
                 updatePetState(hunger: state.hunger, happiness: state.happiness)
             }
         }
         .task(id: currentActivity?.id) {
             guard let activity = currentActivity else { return }
-            for await update in Activity<PetAttributes>.activityUpdates {
-                guard update.id == activity.id else { continue }
-                let state = update.contentState
+            for await contentState in activity.contentUpdates {
+                let state = contentState.state
                 await MainActor.run {
                     updatePetState(hunger: state.hunger, happiness: state.happiness)
                 }
@@ -184,6 +192,16 @@ struct PetDashboardView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Are you sure you want to permanently remove this pet? This cannot be undone.")
+        }
+        .sheet(isPresented: $showFishingGame) {
+            FishingGameView(petAssetName: pet.assetName)
+        }
+        .sheet(isPresented: $showTugOfWarGame) {
+            TugOfWarGameView(petAssetName: pet.assetName) { reward in
+                Task {
+                    await applyHappinessReward(reward)
+                }
+            }
         }
     }
 
@@ -278,6 +296,8 @@ extension PetDashboardView {
     }
 
     private func feedPet() async {
+        guard foodCount > 0 else { return }
+        foodCount -= 1
         os_log("🍖 Feeding pet")
         let newHunger    = max(0, hunger - 25)
         let newHappiness = happiness
@@ -301,10 +321,10 @@ extension PetDashboardView {
         }
     }
 
-    private func playPet() async {
-        os_log("🎮 Playing with pet")
+    private func applyHappinessReward(_ amount: Int) async {
+        os_log("🎮 Playing mini-game with pet, reward: %{public}d", amount)
         let newHunger    = hunger
-        let newHappiness = min(100, happiness + 20)
+        let newHappiness = min(100, happiness + max(0, amount))
 
         if let activity = currentActivity {
             var state = activity.content.state

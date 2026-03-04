@@ -8,47 +8,6 @@
 import ActivityKit
 import Foundation
 
-enum PetActivityManager {
-
-    /// Call when the player adopts a pet or opens the app after install.
-    static func startActivity(petID: String,
-                              speciesID: String,
-                              initialHunger: Int = 10,
-                              initialHappiness: Int = 100) {
-        Task {
-            guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-
-            let attrs = PetAttributes(petID: petID, speciesID: speciesID)
-            let state = PetAttributes.ContentState(
-                            happiness: initialHappiness,
-                            hunger: initialHunger)
-
-            do {
-                let activity = try await Activity.request(
-                    attributes: attrs,
-                    contentState: state,
-                    pushType: .token)               // remote-updatable
-
-                // Listen for the unique push token and forward it
-                for await tokenData in activity.pushTokenUpdates {
-                    do {
-                        try await Network.sendLiveActivityToken(
-                            tokenData,
-                            activityID: activity.id,
-                            petID: petID,
-                            speciesID: speciesID
-                        )
-                    } catch {
-                        print("❌ sendLiveActivityToken error:", error)
-                    }
-                }
-            } catch {
-                print("Failed to start Live Activity:", error)
-            }
-        }
-    }
-}
-
 enum Network {
     
     static let baseURL: URL = {
